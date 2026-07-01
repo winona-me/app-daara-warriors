@@ -32,5 +32,10 @@
         <property name="hibernate.show_sql">true</property>
         <property name="hibernate.format_sql">true</property>
 
+        <mapping class="sn.l2gl.warriors.daara.model.models.Maitre"/>
+        <mapping class="sn.l2gl.warriors.daara.model.models.Classe"/>
+        <mapping class="sn.l2gl.warriors.daara.model.models.Talibe"/>
+        <mapping class="sn.l2gl.warriors.daara.model.models.Progression"/>
+
     </session-factory>
 </hibernate-configuration>
