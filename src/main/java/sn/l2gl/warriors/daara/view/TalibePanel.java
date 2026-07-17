@@ -31,6 +31,7 @@ public class TalibePanel extends JPanel {
     private final TalibeView vue = new TalibeView();
 
     private List<Talibe> talibesAffiches = new ArrayList<>();
+    private String matriculeSelectionne = null;
 
     public TalibePanel(ControllerTalibe controllerTalibe, ControllerClasse controllerClasse) {
         this.controllerTalibe = controllerTalibe;
@@ -44,7 +45,10 @@ public class TalibePanel extends JPanel {
 
         vue.getBoutonToutAfficher().addActionListener(e -> toutAfficher());
         vue.getBoutonChercher().addActionListener(e -> rechercher());
-        vue.getBoutonNouveau().addActionListener(e -> vue.reinitialiser());
+        vue.getBoutonNouveau().addActionListener(e -> {
+            vue.reinitialiser();
+            matriculeSelectionne = null;
+        });
         vue.getBoutonEnregistrer().addActionListener(e -> enregistrer());
         vue.getBoutonSupprimer().addActionListener(e -> supprimer());
         vue.getBoutonExporter().addActionListener(e -> exporter());
@@ -86,7 +90,9 @@ public class TalibePanel extends JPanel {
         if (e.getValueIsAdjusting()) return;
         int ligne = vue.getTable().getSelectedRow();
         if (ligne >= 0 && ligne < talibesAffiches.size()) {
-            vue.remplir(talibesAffiches.get(ligne));
+            Talibe t = talibesAffiches.get(ligne);
+            vue.remplir(t);
+            matriculeSelectionne = t.getMatricule();
         }
     }
 
@@ -136,7 +142,17 @@ public class TalibePanel extends JPanel {
             talibe.setClasse(classe);
 
             if (existe) {
-                controllerTalibe.modifierTalibe(talibe);
+                boolean modeModification = matriculeSelectionne != null && matriculeSelectionne.equals(matricule);
+
+                if (modeModification) {
+                    controllerTalibe.modifierTalibe(talibe);
+                } else {
+                    controllerTalibe.ajouterTalibe(talibe);
+                }
+
+                vue.reinitialiser();
+                matriculeSelectionne = null;
+                toutAfficher();
             } else {
                 controllerTalibe.ajouterTalibe(talibe);
             }

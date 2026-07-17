@@ -14,6 +14,6 @@ public class DaaraException extends RuntimeException {
     }
 
     public DaaraException(String message, Throwable cause) {
-        super(message, cause);
+        super(message,cause);
     }
 }

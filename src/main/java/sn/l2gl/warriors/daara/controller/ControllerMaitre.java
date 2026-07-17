@@ -3,7 +3,7 @@ package sn.l2gl.warriors.daara.controller;
 import sn.l2gl.warriors.daara.exception.MaitreDejaExistantException;
 import sn.l2gl.warriors.daara.exception.MaitreIntrouvableException;
 import sn.l2gl.warriors.daara.exception.SuppressionImpossibleException;
-import sn.l2gl.warriors.daara.model.dao.Dao;
+import sn.l2gl.warriors.daara.model.dao.MaitreDao;
 import sn.l2gl.warriors.daara.model.models.Maitre;
 
 import java.util.List;
@@ -15,16 +15,12 @@ import java.util.List;
  * Applique les règles métier (unicité du matricule, non-suppression
  * d'un maître ayant des classes assignées, etc.) et lève les
  * exceptions métier appropriées en cas de violation.
- *
- * NOTE: Dépend de l'interface générique Dao<Maitre, String>.
- * À adapter si le DAO concret (feature/dao-maitre-classe) expose
- * des méthodes de recherche supplémentaires (ex: findByNom).
  */
 public class ControllerMaitre {
 
-    private final Dao<Maitre, String> maitreDao;
+    private final MaitreDao maitreDao;
 
-    public ControllerMaitre(Dao<Maitre, String> maitreDao) {
+    public ControllerMaitre(MaitreDao maitreDao) {
         this.maitreDao = maitreDao;
     }
 
@@ -60,7 +56,6 @@ public class ControllerMaitre {
      * Modifie les informations d'un maître existant.
      */
     public Maitre modifierMaitre(Maitre maitre) {
-        // Vérifie que le maître existe avant modification
         trouverMaitre(maitre.getMatricule());
 
         return maitreDao.modifier(maitre)
@@ -73,9 +68,10 @@ public class ControllerMaitre {
      * pas être supprimé (il faut d'abord réassigner ou supprimer ses classes).
      */
     public void supprimerMaitre(String matricule) {
-        Maitre maitre = trouverMaitre(matricule);
+        trouverMaitre(matricule);   // vérifie juste qu'il existe
 
-        if (maitre.getClasses() != null && !maitre.getClasses().isEmpty()) {
+        long nbClasses = maitreDao.compterClasses(matricule);
+        if (nbClasses > 0) {
             throw new SuppressionImpossibleException(
                     "Impossible de supprimer le maître " + matricule
                             + " : il a des classes assignées."
