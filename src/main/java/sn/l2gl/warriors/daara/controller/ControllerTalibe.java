@@ -1,86 +1,58 @@
 package sn.l2gl.warriors.daara.controller;
 
-import sn.l2gl.warriors.daara.model.dao.Dao;
+import sn.l2gl.warriors.daara.exception.TalibeDejaExistantException;
+import sn.l2gl.warriors.daara.exception.TalibeIntrouvableException;
+import sn.l2gl.warriors.daara.model.dao.TalibeDao;
 import sn.l2gl.warriors.daara.model.models.Talibe;
 
 import java.util.List;
 
-/**
- * ControllerTalibe — Contrôleur MVC pour la gestion des Talibés.
- *
- * Fait le lien entre la vue (Swing) et le DAO Talibe.
- * Applique les règles métier avant les opérations CRUD.
- *
- * NOTE : Adapter le type de l'identifiant si nécessaire.
- */
 public class ControllerTalibe {
 
-    private final Dao<Talibe, String> talibeDao;
+    private final TalibeDao talibeDao;   // ✅ type concret
 
-    public ControllerTalibe(Dao<Talibe, String> talibeDao) {
+    public ControllerTalibe(TalibeDao talibeDao) {
         this.talibeDao = talibeDao;
     }
 
-    /**
-     * Ajoute un nouveau talibé.
-     */
     public Talibe ajouterTalibe(Talibe talibe) {
-
         if (talibe.getMatricule() != null
                 && talibeDao.trouver(talibe.getMatricule()).isPresent()) {
-            throw new IllegalArgumentException(
-                    "Un talibé avec ce matricule existe déjà."
-            );
+            throw new TalibeDejaExistantException(talibe.getMatricule());   // ✅
         }
-
         return talibeDao.inserer(talibe);
     }
 
-    /**
-     * Recherche un talibé par matricule.
-     */
     public Talibe trouverTalibe(String matricule) {
         return talibeDao.trouver(matricule)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Talibé introuvable : " + matricule
-                        ));
+                .orElseThrow(() -> new TalibeIntrouvableException(matricule));   // ✅
     }
 
-    /**
-     * Retourne la liste de tous les talibés.
-     */
     public List<Talibe> listerTalibes() {
         return talibeDao.listerTous();
     }
 
-    /**
-     * Modifie un talibé existant.
-     */
     public Talibe modifierTalibe(Talibe talibe) {
-
         trouverTalibe(talibe.getMatricule());
-
         return talibeDao.modifier(talibe)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Talibé introuvable : " + talibe.getMatricule()
-                        ));
+                .orElseThrow(() -> new TalibeIntrouvableException(talibe.getMatricule()));   // ✅
     }
 
-    /**
-     * Supprime un talibé.
-     */
     public void supprimerTalibe(String matricule) {
-
         trouverTalibe(matricule);
-
         boolean supprime = talibeDao.supprimer(matricule);
-
         if (!supprime) {
-            throw new IllegalArgumentException(
-                    "Talibé introuvable : " + matricule
-            );
+            throw new TalibeIntrouvableException(matricule);   // ✅
         }
+    }
+
+    /** Recherche des talibés par nom/prénom — délègue au DAO concret. */
+    public List<Talibe> rechercherTalibes(String texte) {
+        return talibeDao.rechercherParNom(texte);
+    }
+
+    /** Liste les talibés d'une classe donnée — délègue au DAO concret. */
+    public List<Talibe> listerTalibesParClasse(String codeClasse) {
+        return talibeDao.listerParClasse(codeClasse);
     }
 }

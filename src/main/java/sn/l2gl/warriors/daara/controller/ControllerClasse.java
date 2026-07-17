@@ -1,5 +1,7 @@
 package sn.l2gl.warriors.daara.controller;
 
+import sn.l2gl.warriors.daara.exception.ClasseDejaExistanteException;
+import sn.l2gl.warriors.daara.exception.ClasseIntrouvableException;
 import sn.l2gl.warriors.daara.exception.SuppressionImpossibleException;
 import sn.l2gl.warriors.daara.model.dao.ClasseDao;
 import sn.l2gl.warriors.daara.model.models.Classe;
@@ -8,7 +10,7 @@ import java.util.List;
 
 public class ControllerClasse {
 
-    private final ClasseDao classeDao;   // ✅ type concret, plus Dao<Classe, String>
+    private final ClasseDao classeDao;
 
     public ControllerClasse(ClasseDao classeDao) {
         this.classeDao = classeDao;
@@ -17,16 +19,14 @@ public class ControllerClasse {
     public Classe ajouterClasse(Classe classe) {
         if (classe.getCode() != null
                 && classeDao.trouver(classe.getCode()).isPresent()) {
-            throw new IllegalArgumentException(
-                    "Une classe avec le code " + classe.getCode() + " existe déjà."
-            );
+            throw new ClasseDejaExistanteException(classe.getCode());
         }
         return classeDao.inserer(classe);
     }
 
     public Classe trouverClasse(String code) {
         return classeDao.trouver(code)
-                .orElseThrow(() -> new IllegalArgumentException("Classe introuvable : " + code));
+                .orElseThrow(() -> new ClasseIntrouvableException(code));
     }
 
     public List<Classe> listerClasses() {
@@ -36,13 +36,13 @@ public class ControllerClasse {
     public Classe modifierClasse(Classe classe) {
         trouverClasse(classe.getCode());
         return classeDao.modifier(classe)
-                .orElseThrow(() -> new IllegalArgumentException("Classe introuvable : " + classe.getCode()));
+                .orElseThrow(() -> new ClasseIntrouvableException(classe.getCode()));
     }
 
     public void supprimerClasse(String code) {
         trouverClasse(code);
 
-        long nbTalibes = classeDao.compterTalibes(code);   // ✅ requête, plus getTalibes()
+        long nbTalibes = classeDao.compterTalibes(code);
         if (nbTalibes > 0) {
             throw new SuppressionImpossibleException(
                     "Impossible de supprimer la classe " + code
@@ -52,7 +52,7 @@ public class ControllerClasse {
 
         boolean supprime = classeDao.supprimer(code);
         if (!supprime) {
-            throw new IllegalArgumentException("Classe introuvable : " + code);
+            throw new ClasseIntrouvableException(code);   //
         }
     }
 }
