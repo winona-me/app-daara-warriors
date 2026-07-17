@@ -24,6 +24,7 @@ public class MaitrePanel extends JPanel {
 
     private final ControllerMaitre controllerMaitre;
     private final MaitreView vue = new MaitreView();
+    private String matriculeSelectionne = null;   // null = mode "création"
 
     private List<Maitre> maitresAffiches = new ArrayList<>();
 
@@ -37,7 +38,7 @@ public class MaitrePanel extends JPanel {
 
         vue.getBoutonToutAfficher().addActionListener(e -> toutAfficher());
         vue.getBoutonChercher().addActionListener(e -> rechercher());
-        vue.getBoutonNouveau().addActionListener(e -> vue.reinitialiser());
+        vue.getBoutonNouveau().addActionListener(e -> {vue.reinitialiser();matriculeSelectionne = null;});  // retour en mode création
         vue.getBoutonEnregistrer().addActionListener(e -> enregistrer());
         vue.getBoutonSupprimer().addActionListener(e -> supprimer());
         vue.getBoutonExporter().addActionListener(e -> exporter());
@@ -75,7 +76,9 @@ public class MaitrePanel extends JPanel {
         if (e.getValueIsAdjusting()) return;
         int ligne = vue.getTable().getSelectedRow();
         if (ligne >= 0 && ligne < maitresAffiches.size()) {
-            vue.remplir(maitresAffiches.get(ligne));
+            Maitre m = maitresAffiches.get(ligne);
+            vue.remplir(m);
+            matriculeSelectionne = m.getMatricule();   // ✅ on retient qu'on édite CE maître
         }
     }
 
@@ -93,9 +96,6 @@ public class MaitrePanel extends JPanel {
                 return;
             }
 
-            boolean existe = controllerMaitre.listerMaitres().stream()
-                    .anyMatch(m -> m.getMatricule().equals(matricule));
-
             Maitre maitre = new Maitre();
             maitre.setMatricule(matricule);
             maitre.setPrenom(prenom);
@@ -103,13 +103,18 @@ public class MaitrePanel extends JPanel {
             maitre.setTelephone(telephone);
             maitre.setSpecialite(specialite);
 
-            if (existe) {
+            // ✅ modification SEULEMENT si on édite le même matricule qu'on avait sélectionné
+            boolean modeModification = matriculeSelectionne != null
+                    && matriculeSelectionne.equals(matricule);
+
+            if (modeModification) {
                 controllerMaitre.modifierMaitre(maitre);
             } else {
-                controllerMaitre.ajouterMaitre(maitre);
+                controllerMaitre.ajouterMaitre(maitre);   // ✅ lèvera MaitreDejaExistantException si le matricule existe
             }
 
             vue.reinitialiser();
+            matriculeSelectionne = null;
             toutAfficher();
 
         } catch (DaaraException | IllegalArgumentException ex) {
