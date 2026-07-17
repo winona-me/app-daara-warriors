@@ -89,4 +89,12 @@ public class ClasseDao implements Dao<Classe, String> {
                     .list();
         }
     }
+    public long compterTalibes(String code) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery(
+                            "select count(t) from Talibe t where t.classe.code = :c", Long.class)
+                    .setParameter("c", code)
+                    .uniqueResult();
+        }
+    }
 }

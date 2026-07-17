@@ -29,6 +29,7 @@ public class ClassPanel extends JPanel {
     private final ClasseView vue = new ClasseView();
 
     private List<Classe> classesAffichees = new ArrayList<>();
+    private String codeSelectionne = null;
 
     public ClassPanel(ControllerClasse controllerClasse, ControllerMaitre controllerMaitre) {
         this.controllerClasse = controllerClasse;
@@ -42,7 +43,10 @@ public class ClassPanel extends JPanel {
 
         vue.getBoutonToutAfficher().addActionListener(e -> toutAfficher());
         vue.getBoutonChercher().addActionListener(e -> rechercher());
-        vue.getBoutonNouveau().addActionListener(e -> vue.reinitialiser());
+        vue.getBoutonNouveau().addActionListener(e -> {vue.reinitialiser();codeSelectionne = null;});
+
+
+
         vue.getBoutonEnregistrer().addActionListener(e -> enregistrer());
         vue.getBoutonSupprimer().addActionListener(e -> supprimer());
         vue.getBoutonExporter().addActionListener(e -> exporter());
@@ -83,7 +87,9 @@ public class ClassPanel extends JPanel {
         if (e.getValueIsAdjusting()) return;
         int ligne = vue.getTable().getSelectedRow();
         if (ligne >= 0 && ligne < classesAffichees.size()) {
-            vue.remplir(classesAffichees.get(ligne));
+            Classe c = classesAffichees.get(ligne);
+            vue.remplir(c);
+            codeSelectionne = c.getCode();
         }
     }
 
@@ -95,18 +101,17 @@ public class ClassPanel extends JPanel {
             Maitre maitre = (Maitre) vue.getComboMaitre().getSelectedItem();
 
             if (code.isEmpty() || libelle.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Le code et le libelle sont obligatoires.",
+                JOptionPane.showMessageDialog(this, "Code et libelle sont obligatoires.",
                         "Champs manquants", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             if (maitre == null) {
-                JOptionPane.showMessageDialog(this, "Veuillez selectionner un maitre.",
+                JOptionPane.showMessageDialog(this, "Selectionnez un maitre.",
                         "Champ manquant", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            boolean existe = controllerClasse.listerClasses().stream()
-                    .anyMatch(c -> c.getCode().equals(code));
+            boolean modeModification = codeSelectionne != null && codeSelectionne.equals(code);
 
             Classe classe = new Classe();
             classe.setCode(code);
@@ -114,13 +119,14 @@ public class ClassPanel extends JPanel {
             classe.setNiveau(niveau);
             classe.setMaitre(maitre);
 
-            if (existe) {
+            if (modeModification) {
                 controllerClasse.modifierClasse(classe);
             } else {
                 controllerClasse.ajouterClasse(classe);
             }
 
             vue.reinitialiser();
+            codeSelectionne = null;
             toutAfficher();
 
         } catch (DaaraException | IllegalArgumentException ex) {

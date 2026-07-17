@@ -3,7 +3,7 @@ package sn.l2gl.warriors.daara.controller;
 import sn.l2gl.warriors.daara.exception.MaitreDejaExistantException;
 import sn.l2gl.warriors.daara.exception.MaitreIntrouvableException;
 import sn.l2gl.warriors.daara.exception.SuppressionImpossibleException;
-import sn.l2gl.warriors.daara.model.dao.Dao;
+import sn.l2gl.warriors.daara.model.dao.MaitreDao;import sn.l2gl.warriors.daara.model.dao.Dao;
 import sn.l2gl.warriors.daara.model.models.Maitre;
 
 import java.util.List;
@@ -22,9 +22,9 @@ import java.util.List;
  */
 public class ControllerMaitre {
 
-    private final Dao<Maitre, String> maitreDao;
+    private final MaitreDao maitreDao;
 
-    public ControllerMaitre(Dao<Maitre, String> maitreDao) {
+    public ControllerMaitre(MaitreDao maitreDao) {
         this.maitreDao = maitreDao;
     }
 
@@ -75,7 +75,8 @@ public class ControllerMaitre {
     public void supprimerMaitre(String matricule) {
         Maitre maitre = trouverMaitre(matricule);
 
-        if (maitre.getClasses() != null && !maitre.getClasses().isEmpty()) {
+        long nbClasses = maitreDao.compterClasses(matricule);   // ✅ plus de cast
+        if (nbClasses > 0) {
             throw new SuppressionImpossibleException(
                     "Impossible de supprimer le maître " + matricule
                             + " : il a des classes assignées."

@@ -91,4 +91,14 @@ public class MaitreDao implements Dao<Maitre, String> {
                     .list();
         }
     }
+
+
+    public long compterClasses(String matricule) {
+        try (Session session = sessionFactory.openSession()) {
+            return session.createQuery(
+                            "select count(c) from Classe c where c.maitre.matricule = :mat", Long.class)
+                    .setParameter("mat", matricule)
+                    .uniqueResult();
+        }
+    }
 }
